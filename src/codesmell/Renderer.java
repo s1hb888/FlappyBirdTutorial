@@ -1,4 +1,4 @@
-package sreproject;
+package codesmell;
 
 import javax.swing.*;
 import java.awt.*;

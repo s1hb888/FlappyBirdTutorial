@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package sreproject;
+package codesmell;
 
 /**
  *
@@ -16,7 +16,7 @@ public class FlappyBird {
 
     public static FlappyBird flappyBird;
 
-    public final int WIDTH = 800, HEIGHT = 800;
+    public final int WIDTH = 1000, HEIGHT = 800;
 
     private Renderer renderer;
     private Bird bird;
@@ -29,9 +29,8 @@ public class FlappyBird {
 
     public FlappyBird() {
         JFrame jframe = new JFrame();
-        timer = new Timer(20, new GameLoop());
-        renderer = new Renderer(this);
 
+        renderer = new Renderer(this);
         renderer.setFocusable(true);
         renderer.requestFocusInWindow();
 
@@ -43,30 +42,55 @@ public class FlappyBird {
         jframe.setVisible(true);
 
         // Add listeners with adapters
-        jframe.addMouseListener(new MouseAdapter() {
+        renderer.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 jump();
             }
         });
 
-        jframe.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    jump();
-                }
-            }
-        });
+       renderer.addKeyListener(new KeyAdapter() {
+    @Override
+    public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            jump();
+        }
+    }
+});
 
         bird = new Bird(WIDTH / 2 - 10, HEIGHT / 2 - 10, 20, 20);
         columnManager = new ColumnManager(WIDTH, HEIGHT);
-       gameState = new GameState();
-       gameStateManager = new GameStateManager(gameState);
+        gameState = new GameState();
+        gameStateManager = new GameStateManager(gameState);
         birdController = new BirdController(gameState);
         collisionManager = new CollisionManager();
 
         addInitialColumns();
+
+        // Timer logic directly embedded
+        timer = new Timer(20, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gameState.ticks++;
+
+                if (gameState.started) {
+                    columnManager.moveColumns(10);
+                    birdController.applyGravity(gameState.ticks);
+                    birdController.moveBird(bird);
+                    columnManager.removeOffscreenColumns(() -> columnManager.addColumn(false));
+                    collisionManager.checkCollision(
+                        bird,
+                        columnManager.getColumns(),
+                        gameState,
+                        gameStateManager,
+                        HEIGHT
+                    );
+                }
+
+                renderer.repaint();
+            }
+        });
+
         timer.start();
     }
 
@@ -88,23 +112,6 @@ public class FlappyBird {
         columnManager.reset();
         for (int i = 0; i < 4; i++) {
             columnManager.addColumn(true);
-        }
-    }
-
-    private class GameLoop implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            gameState.ticks++;
-
-            if (gameState.started) {
-                columnManager.moveColumns(10);
-                birdController.applyGravity(gameState.ticks);
-                birdController.moveBird(bird);
-                columnManager.removeOffscreenColumns(() -> columnManager.addColumn(false));
-                collisionManager.checkCollision(bird, columnManager.getColumns(), gameState, gameStateManager, HEIGHT);
-            }
-
-            renderer.repaint();
         }
     }
 

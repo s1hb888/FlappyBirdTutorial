@@ -1,4 +1,4 @@
-package sreproject;
+package codesmell;
 
 import java.awt.Rectangle;
 
